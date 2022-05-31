@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import com.example.recordaudio.databinding.FragmentRecordBinding
+import kotlinx.android.synthetic.main.fragment_record.*
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -139,7 +140,7 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
                 ),
                 111
             )
-            //onPermssionResult enable button
+            //onPermissionResult enable button
         }
 
     }
@@ -165,6 +166,8 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
         }
 
         viewBinding.textViewTime.text = formatted
+
+        viewBinding.waveFormView.addAmplitude(amp = recorder.maxAmplitude.toFloat())
     }
 
 
