@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="btnList" type="id" />
+    <item name="btnDelete" type="id" />
+    <item name="btnDone" type="id" />
+    <item name="waveFormView" type="id" />
+</resources>

@@ -3,7 +3,6 @@ package com.example.recordaudio
 import android.Manifest.permission
 import android.content.Context
 import android.content.pm.PackageManager
-import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Bundle
@@ -12,10 +11,12 @@ import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.view.isVisible
 import com.example.recordaudio.databinding.FragmentRecordBinding
-import kotlinx.android.synthetic.main.fragment_record.*
+import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.time.Duration
@@ -30,6 +31,7 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
             }
     }
 
+    private lateinit var amplitudes: ArrayList<Float>
     private lateinit var recorder: MediaRecorder
 
     private lateinit var vibrator: Vibrator
@@ -46,16 +48,14 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         checkPermission()
-        viewBinding.buttonPlay.isEnabled = true
-        viewBinding.buttonRecord.isEnabled = true
-
+        viewBinding.btnRecord.isEnabled = true
+        //after checking for permission initialize recorder
+        recorder = MediaRecorder()
         timer = Timer(this)
         vibrator = mainActivity.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
-        //after checking for permission initialize recorder
-        recorder = MediaRecorder()
 
-        viewBinding.buttonRecord.setOnClickListener {
+        viewBinding.btnRecord.setOnClickListener {
             when {
                 isPaused -> resumeRecorder()
                 isRecording -> pauseRecorder()
@@ -64,7 +64,7 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
             vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         }
 
-
+/*
 
         viewBinding.buttonPlay.setOnClickListener {
             val mp = MediaPlayer()
@@ -76,35 +76,54 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
                 start()
             }
         }
+*/
+        viewBinding.btnList.setOnClickListener {
+            Toast.makeText(requireContext(), "list todo", Toast.LENGTH_LONG).show()
+        }
+
+        viewBinding.btnDone.setOnClickListener {
+            stopRecorder()
+            Toast.makeText(requireContext(), "record saved todo", Toast.LENGTH_LONG).show()
+        }
+
+        viewBinding.btnDelete.setOnClickListener {
+            if (isRecording) {
+                stopRecorder()
+                File("$dirPath$fileName.mp3")
+            }
+
+        }
+
+        viewBinding.btnDelete.isClickable = false
+        viewBinding.btnDone.isVisible = false
     }
 
     private fun resumeRecorder() {
         recorder.resume()
         isPaused = false
-        viewBinding.buttonRecord.text = "Pause"
         timer.start()
     }
 
     private fun pauseRecorder() {
         recorder.pause()
         isPaused = true
-        viewBinding.buttonRecord.text = "Record"
         timer.pause()
     }
 
     private fun startRecording() {
-
-
-        dirPath = "${mainActivity.externalCacheDir?.absolutePath}/"
-        val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
-        val date = simpleDateFormat.format(Date())
-        fileName = "audio_record_$date"
-
+        recorder = MediaRecorder()
         recorder.apply {
+
             //record from microphone
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+
+            dirPath = "${mainActivity.externalCacheDir?.absolutePath}/"
+            val simpleDateFormat = SimpleDateFormat("yyyy.MM.DD_hh.mm.ss")
+            val date = simpleDateFormat.format(Date())
+
+            fileName = "audio_record_$date"
             setOutputFile("$dirPath$fileName.mp3")
 
             try {
@@ -114,14 +133,39 @@ class RecordFragment : BaseFragment(), Timer.OnTimerTickListener {
             }
             start()
         }
-        viewBinding.buttonRecord.text = "Stop"
+
+        viewBinding.btnRecord.setImageResource(R.drawable.ic_pause_24)
         isPaused = false
         isRecording = true
         timer.start()
+
+        viewBinding.btnDelete.isClickable = true
+
+        viewBinding.btnList.isVisible = false
+        viewBinding.btnDone.isVisible = true
     }
 
     private fun stopRecorder() {
         timer.stop()
+
+        recorder.apply {
+            stop()
+            release()
+        }
+
+        isPaused = false
+        isRecording = false
+
+        viewBinding.btnList.isVisible = true
+        viewBinding.btnDone.isVisible = false
+        viewBinding.btnDelete.isClickable = false
+        viewBinding.btnDelete.setImageResource(R.drawable.ic_delete)
+        viewBinding.btnRecord.setImageResource(R.drawable.ic_record)
+
+
+        viewBinding.textViewTime.text = "00:00:00"
+
+        amplitudes = viewBinding.waveFormView.clear()
     }
 
     private fun checkPermission() {

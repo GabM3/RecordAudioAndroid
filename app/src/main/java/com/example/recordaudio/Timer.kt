@@ -18,7 +18,7 @@ class Timer(listener: OnTimerTickListener) {
     private lateinit var runnable: Runnable
 
     private var duration: Duration = Duration.ZERO
-    private var delay : Duration = Duration.ofMillis(100L)
+    private var delay : Duration = Duration.ofMillis(50L)
 
 
     init {
